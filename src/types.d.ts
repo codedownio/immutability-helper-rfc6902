@@ -1,4 +1,5 @@
 
+declare module "immutability-helper-rfc6902";
 
 declare type Operation =
   AddOperation<any>
