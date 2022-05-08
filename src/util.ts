@@ -54,6 +54,7 @@ export function isEqual(a: any, b: any) {
 export function isInteger(str: string) {
   var i = 0;
   var len = str.length;
+  if (len === 0) return false;
   var charCode;
   while (i < len) {
     charCode = str.charCodeAt(i);

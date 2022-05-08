@@ -1,6 +1,7 @@
 
 import assert from "assert";
-import { applyPatch } from "fast-json-patch";
+import fc from "fast-check";
+import { applyPatch, compare } from "fast-json-patch";
 import cloneDeep from "lodash/cloneDeep";
 import isEqual from "lodash/isEqual";
 
@@ -29,7 +30,7 @@ function test(doc: any, patches: Operation[]) {
     } else if (ourResult.tag === "success" && desired.tag === "error") {
       assert.fail("Our result succeeded but the reference implementation errored.");
     } else if (ourResult.tag === "error" && desired.tag === "success") {
-      assert.fail("Our result errored but the reference implementation succeeded.");
+      assert.fail("Our result errored but the reference implementation succeeded: " + ourResult.msg);
     }
   });
 }
@@ -78,4 +79,23 @@ describe("Test", () => {
   test({foo: "bar"}, [{op: "test", path: "/foo", value: "bar"}]);
   test({"/": 9, "~1": 10}, [{op: "test", path: "/~01", value: 10}]); // RFC A.14
   test({"/": 9, "~1": 10}, [{op: "test", path: "/~01", value: "10"}]); // RFC A.15
+});
+
+describe("Unusual", () => {
+  test({}, [{op: "add", path: "/", value: 0 }]);
+  test({}, [{op: 'add', path: '/', value: {}}]);
+});
+
+describe("Randomized tests", () => {
+  it("does a random test", () => {
+    fc.assert(fc.property(fc.anything(), fc.anything(), (originalDoc: any, newDoc: any) => {
+      if (originalDoc === undefined || newDoc === undefined) return;
+      if (originalDoc === null || newDoc === null) return;
+
+      // console.log(`Trying case '${JSON.stringify(originalDoc)}', '${JSON.stringify(newDoc)}'`);
+
+      const diff = compare(originalDoc, newDoc, false);
+      test(originalDoc, diff);
+    }));
+  });
 });
