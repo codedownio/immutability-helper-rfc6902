@@ -64,10 +64,14 @@ test({foo: ["bar", "qux", "baz"]}, [{op: "remove", path: "/foo/1"}]); // RFC A.4
 
 printHeading("Replace");
 test({baz: "qux", foo: "bar"}, [{op: "replace", path: "/baz", value: "boo"}]); // RFC A.5
+test({foo: "bar"}, [{op: "replace", path: "/a", value: "abc"}]);
 
 printHeading("Move");
 test({foo: {bar: "baz", waldo: "fred"}, qux: {corge: "grault"}}, [{op: "move", from: "/foo/waldo", path: "/qux/thud"}]); // RFC A.6
 test({foo: ["all", "grass", "cows", "eat"]}, [{op: "move", from: "/foo/1", path: "/foo/3"}]); // RFC A.7
+test({foo: ["all", "grass", "cows", "eat"]}, [{op: "move", from: "/foo/1", path: "/foo/-"}]); // RFC A.7 variation
+test({foo: "bar"}, [{op: "move", from: "/a", path: "/b"}]); // Move from nonexistent
+test({foo: {bar: "baz", waldo: "fred"}, qux: {corge: "grault"}}, [{op: "move", from: "/quz", path: "/qux/thud"}]); // Should error: move from proper prefix
 
 printHeading("Test");
 test({foo: "bar"}, [{op: "test", path: "/foo", value: "bar"}]);
