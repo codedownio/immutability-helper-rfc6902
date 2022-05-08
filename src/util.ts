@@ -1,15 +1,4 @@
 
-
-export function getValueByPointer(document: any, pointer: string) {
-  if (pointer == '') {
-    return document;
-  }
-  var getOriginalDestination: GetOperation<any> = { op: "_get", value: null, path: pointer };
-  return null; // TODO
-  // applyOperation(document, getOriginalDestination);
-  // return getOriginalDestination.value;
-}
-
 // based on https://github.com/epoberezkin/fast-deep-equal
 // MIT License
 // Copyright (c) 2017 Evgeny Poberezkin
@@ -59,25 +48,6 @@ export function isEqual(a: any, b: any) {
     return true;
   }
   return a !== a && b !== b;
-}
-
-
-function patchErrorMessageFormatter(message: string, args: any) {
-  var messageParts = [message];
-  for (var key in args) {
-    var value = typeof args[key] === 'object' ? JSON.stringify(args[key], null, 2) : args[key]; // pretty print
-    if (typeof value !== 'undefined') {
-      messageParts.push(key + ": " + value);
-    }
-  }
-  return messageParts.join('\n');
-}
-
-export class JsonPatchError {
-  message: string;
-  constructor(message: string, name: string, index: number, operation: Operation, tree: any) {
-    this.message = patchErrorMessageFormatter(message, { name: name, index: index, operation: operation, tree: tree })
-  }
 }
 
 //3x faster than cached /^\d+$/.test(str)
