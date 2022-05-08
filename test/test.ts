@@ -37,6 +37,7 @@ test(cloneDeep(someDoc), [{op: "remove", path: ""}]);
 // test(someDoc, [{op: "move", path: "", from: "/foo"}]);
 // test(someDoc, [{op: "copy", path: "", from: "foo"}]);
 // test(someDoc, [{op: "test", path: "", value: 42}]);
+test({"foo": "bar"}, [{"op": "add", "path": "/child", "value": {"grandchild": {}}}]);
 
 printHeading("Add");
 test({foo: "bar"}, [{"op": "add", "path": "/baz", "value": "qux"}]);
@@ -54,3 +55,7 @@ test({"baz": "qux", "foo": "bar"}, [{"op": "replace", "path": "/baz", "value": "
 printHeading("Move");
 test({"foo": {"bar": "baz", "waldo": "fred"}, "qux": {"corge": "grault"}}, [{"op": "move", "from": "/foo/waldo", "path": "/qux/thud"}]);
 test({"foo": ["all", "grass", "cows", "eat"]}, [{"op": "move", "from": "/foo/1", "path": "/foo/3"}]);
+
+printHeading("Unusual");
+// @ts-ignore
+test({"foo": "bar"}, [{"op": "add", "path": "/baz", "value": "qux", "xyz": 123}]);

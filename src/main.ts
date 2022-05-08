@@ -76,7 +76,7 @@ function applyOperation<T>(value: T, operation: Operation): PatchResult<T | null
 
 		if (!spec) throw new Error("TODO");
 
-		console.log("Got spec", spec);
+		// console.log("Got spec", spec);
 
 		return { tag: "success", value: update(value, spec) };
     }
@@ -87,7 +87,6 @@ function splitKeys(path: string) {
 }
 
 function getValueByKeys(value: any, keys: string[]) {
-	console.log("getValueByKeys", value, keys);
 	for (let key of keys) {
 		if (isInteger(key)) value = value[~~key]
 		else value = value[key];
