@@ -48,6 +48,9 @@ function applyOperation<T>(value: T, operation: Operation): PatchResult<T | null
 			if (isInteger(finalKey)) {
 				spec = {$splice: [[~~finalKey, 0, operation.value]]};
 				keys.length = keys.length - 1;
+			} else if (finalKey === "-") {
+				spec = {$push: [operation.value]};
+				keys.length = keys.length - 1;
 			} else spec = {$set: operation.value};
 
 			for (let i = keys.length - 1; i >= 0; i -= 1) spec = {[keys[i]]: spec};
