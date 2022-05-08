@@ -1,5 +1,7 @@
 
-import {JsonPatchError, getValueByPointer, _areEquals} from "./util";
+import update from "immutability-helper";
+
+import { JsonPatchError, getValueByPointer, _areEquals, unescapePathComponent, isInteger } from "./util";
 
 
 export function patch<T>(value: T, operations: ReadonlyArray<Operation>): PatchResult<T> {
@@ -37,6 +39,34 @@ function applyOperation<T>(value: T, operation: Operation, index: number, banPro
 			throw new JsonPatchError("Operation `op` property is not one of operations defined in RFC-6902", "OPERATION_OP_INVALID", index, operation, value);
         }
     } else {
-		throw new Error("TODO");
+		const keys: string[] = operation.path.split("/").slice(1).map((key) => (key && key.indexOf('~') != -1) ? unescapePathComponent(key) : key);
+
+		let spec: any;
+
+		if (operation.op === "add") {
+			const finalKey = keys[keys.length - 1];
+			if (isInteger(finalKey)) {
+				spec = {$splice: [[~~finalKey, 0, operation.value]]};
+				keys.length = keys.length - 1;
+			} else {
+				spec = {$set: operation.value};
+			}
+
+			for (let i = keys.length - 1; i >= 0; i -= 1) spec = {[keys[i]]: spec};
+        } else if (operation.op === "remove") {
+			const finalKey = keys[keys.length - 1];
+			if (isInteger(finalKey)) {
+				spec = {$splice: [[~~finalKey, 1]]};
+			} else {
+				spec = {$unset: [finalKey]};
+			}
+			keys.length = keys.length - 1;
+
+			for (let i = keys.length - 1; i >= 0; i -= 1) spec = {[keys[i]]: spec};
+        }
+
+		if (!spec) throw new Error("TODO");
+
+		return { tag: "success", value: update(value, spec) };
     }
 }
