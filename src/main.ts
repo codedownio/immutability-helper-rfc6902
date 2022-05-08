@@ -1,7 +1,7 @@
 
 import update from "immutability-helper";
 
-import { JsonPatchError, getValueByPointer, _areEquals, unescapePathComponent, isInteger } from "./util";
+import { JsonPatchError, getValueByPointer, isEqual, unescapePathComponent, isInteger } from "./util";
 
 
 export function patch<T>(value: T, operations: ReadonlyArray<Operation>): PatchResult<T> {
@@ -28,11 +28,8 @@ function applyOperation<T>(value: T, operation: Operation): PatchResult<T | null
         } else if (operation.op === "move" || operation.op === "copy") { // it's a move or copy to root
 			return { tag: "success", value: getValueByKeys(value, splitKeys(operation.from)) };
         } else if (operation.op === "test") {
-			if (!_areEquals(value, operation.value)) {
-				return { tag: "error", msg: "Test failed." };
-			} else {
-				return { tag: "success", value: operation.value };
-			}
+			if (isEqual(value, operation.value)) return { tag: "success", value: operation.value };
+			else return { tag: "error", msg: "Test failed." };
         } else if (operation.op === "remove") { // a remove on root
             return { tag: "success", value: null };
         } else {
@@ -40,7 +37,6 @@ function applyOperation<T>(value: T, operation: Operation): PatchResult<T | null
         }
     } else {
 		const keys: string[] = splitKeys(operation.path);
-
 		let spec: any;
 
 		if (operation.op === "add") {
@@ -80,13 +76,11 @@ function applyOperation<T>(value: T, operation: Operation): PatchResult<T | null
 			return applyOperation(result1.value, {op: "add", value: source, path: operation.path});
         } else if (operation.op === "test") {
 			const source = getValueByKeys(value, splitKeys(operation.path));
-			if (_areEquals(source, operation.value)) return { tag: "success", value };
+			if (isEqual(source, operation.value)) return { tag: "success", value };
 			else return { tag: "error", msg: "Test failed." };
         }
 
 		if (!spec) throw new Error("TODO");
-
-		// console.log("Got spec", spec);
 
 		return { tag: "success", value: update(value, spec) };
     }

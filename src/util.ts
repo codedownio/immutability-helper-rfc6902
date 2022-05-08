@@ -28,7 +28,7 @@ export function getValueByPointer(document: any, pointer: string) {
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-export function _areEquals(a: any, b: any) {
+export function isEqual(a: any, b: any) {
   if (a === b)
     return true;
   if (a && b && typeof a == 'object' && typeof b == 'object') {
@@ -38,7 +38,7 @@ export function _areEquals(a: any, b: any) {
       if (length != b.length)
         return false;
       for (i = length; i-- !== 0;)
-        if (!_areEquals(a[i], b[i]))
+        if (!isEqual(a[i], b[i]))
           return false;
       return true;
     }
@@ -53,7 +53,7 @@ export function _areEquals(a: any, b: any) {
         return false;
     for (i = length; i-- !== 0;) {
       key = keys[i];
-      if (!_areEquals(a[key], b[key]))
+      if (!isEqual(a[key], b[key]))
         return false;
     }
     return true;
