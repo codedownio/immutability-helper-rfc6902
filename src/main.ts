@@ -82,7 +82,11 @@ function applyOperation<T>(value: T, operation: Operation): PatchResult<T | null
 
 		if (!spec) throw new Error("TODO");
 
-		return { tag: "success", value: update(value, spec) };
+		try {
+			return { tag: "success", value: update(value, spec) };
+		} catch (err: any) {
+			return { tag: "error", msg: err.toString() };
+		}
     }
 }
 

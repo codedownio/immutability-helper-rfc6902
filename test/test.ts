@@ -49,12 +49,14 @@ test({foo: "bar"}, [{op: "test", path: "", value: {foo: "bar"}}]);
 
 printHeading("Add");
 test({foo: "bar"}, [{op: "add", path: "/baz", value: "qux"}]); // RFC A.1
+test({foo: "bar"}, [{op: "add", path: "/foo", value: "qux"}]); // Replacing a value with add
 test({foo: "bar", baz: {}}, [{op: "add", path: "/baz/baz2", value: "qux"}]);
 test([], [{op: "add", path: "/0", value: "qux"}]);
 test({foo: ["bar", "baz"]}, [{op: "add", path: "/foo/1", value: "qux"}]); // RFC A.2
 test({foo: "bar"}, [{op: "add", path: "/child", value: {grandchild: {}}}]); // RFC A.10
 test({foo: ["bar"]}, [{op: "add", path: "/foo/-", value: ["abc", "def"]}]); // RFC A.16
 test({foo: "bar"}, [{op: "add", path: "/baz", value: "qux", xyz: 123} as Operation]); // RFC A.11
+test({foo: "bar"}, [{op: "add", path: "/a/b", value: "qux"}]); // add with nonsensical target
 
 printHeading("Remove");
 test({baz: "qux", foo: "bar"}, [{op: "remove", path: "/baz"}]); // RFC A.3
