@@ -4,6 +4,7 @@
   "main": "dist/immutability-helper-rfc6902.cjs.js",
   "module": "dist/immutability-helper-rfc6902.esm.js",
   "browser": "dist/immutability-helper-rfc6902.umd.js",
+  "types": "./src/types.d.ts",
   "dependencies": {},
   "peerDependencies": {
     "immutability-helper": "~3"
