@@ -46,3 +46,11 @@ test({"foo": ["bar", "baz"]}, [{"op": "add", "path": "/foo/1", "value": "qux"}])
 
 printHeading("Remove");
 test({"baz": "qux", "foo": "bar"}, [{"op": "remove", "path": "/baz"}]);
+test({"foo": ["bar", "qux", "baz"]}, [{"op": "remove", "path": "/foo/1"}]);
+
+printHeading("Replace");
+test({"baz": "qux", "foo": "bar"}, [{"op": "replace", "path": "/baz", "value": "boo"}]);
+
+printHeading("Move");
+test({"foo": {"bar": "baz", "waldo": "fred"}, "qux": {"corge": "grault"}}, [{"op": "move", "from": "/foo/waldo", "path": "/qux/thud"}]);
+test({"foo": ["all", "grass", "cows", "eat"]}, [{"op": "move", "from": "/foo/1", "path": "/foo/3"}]);
