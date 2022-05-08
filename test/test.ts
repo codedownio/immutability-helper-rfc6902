@@ -1,53 +1,35 @@
-const assert = require('assert');
-const howLongTillLunch = require('..');
 
-class MockDate {
-	private date = 0;
-	private hours = 0;
-	private minutes = 0;
-	private seconds = 0;
-	private milliseconds = 0;
+import assert from "assert";
+import { applyPatch } from "fast-json-patch";
+import cloneDeep from "lodash/cloneDeep";
+import isEqual from "lodash/isEqual";
 
-	getDate (): number { return this.date; }
-	setDate (date: number): void { this.date = date; }
-	setHours (h: number) { this.hours = h; }
-	setMinutes (m: number): void { this.minutes = m; }
-	setSeconds (s: number): void { this.seconds = s; }
-	setMilliseconds (ms: number): void { this.milliseconds = ms; }
-	getTime (): number { return this.valueOf(); }
-	valueOf (): number {
-		return (
-			this.milliseconds +
-			this.seconds * 1e3 +
-			this.minutes * 1e3 * 60 +
-			this.hours * 1e3 * 60 * 60 +
-			this.date * 1e3 * 60 * 60 * 24
-		);
-	}
+import {patch} from "../src/main";
 
-	static now () { return now.valueOf(); }
+
+function test(doc: any, patches: Operation[]) {
+  // See what fast-json-patch has to say
+  const desired = applyPatch(cloneDeep(doc), patches).newDocument;
+
+  const ourResult = patch(doc, patches);
+  if (ourResult.tag === "success") {
+    if (isEqual(ourResult.value, desired)) {
+      console.log(`\u001B[32m✓\u001B[39m ${JSON.stringify(doc)} + ${JSON.stringify(patches)} --> ${JSON.stringify(desired)}`);
+    } else {
+      console.log(`\u001B[31m✗\u001B[39m ${JSON.stringify(doc)} + ${JSON.stringify(patches)} --> ${JSON.stringify(desired)}`);
+      assert.fail(`Our result was ${JSON.stringify(ourResult.value)}`);
+    }
+  } else {
+    assert.fail("Exception from our library: " + ourResult.msg);
+  }
 }
 
-const now = new MockDate();
+// Basic sanity tests
+const someDoc = {foo: "bar"};
+test(cloneDeep(someDoc), [{op: "add", path: "", value: 42}]);
+test(cloneDeep(someDoc), [{op: "replace", path: "", value: 42}]);
+test(cloneDeep(someDoc), [{op: "remove", path: ""}]);
 
-global.Date = MockDate as any as typeof Date;
-
-function test(hours: number, minutes: number, seconds: number, expected: string): void {
-	now.setHours(hours);
-	now.setMinutes(minutes);
-	now.setSeconds(seconds);
-
-	assert.equal(howLongTillLunch(...lunchtime), expected);
-	console.log(`\u001B[32m✓\u001B[39m ${expected}`);
-}
-
-let lunchtime = [ 12, 30 ];
-test(11, 30, 0, '1 hour');
-test(10, 30, 0, '2 hours');
-test(12, 25, 0, '5 minutes');
-test(12, 29, 15, '45 seconds');
-test(13, 30, 0, '23 hours');
-
-// some of us like an early lunch
-lunchtime = [ 11, 0 ];
-test(10, 30, 0, '30 minutes');
+test(someDoc, [{op: "move", path: "", from: "/foo"}]);
+// test(someDoc, [{op: "copy", path: "", from: "foo"}]);
+// test(someDoc, [{op: "test", path: "", value: 42}]);
