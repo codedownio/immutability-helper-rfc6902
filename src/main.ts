@@ -26,17 +26,17 @@ function applyOperation<T>(value: T, operation: Operation): PatchResult<T | null
         } else if (operation.op === "replace") {
             return { tag: "success", value: operation.value };
         } else if (operation.op === "move" || operation.op === "copy") { // it's a move or copy to root
-			return { tag: "success", value: getValueByPointer(value, operation.from) };
+			return { tag: "success", value: getValueByKeys(value, splitKeys(operation.from)) };
         } else if (operation.op === "test") {
 			if (!_areEquals(value, operation.value)) {
-				throw new JsonPatchError("Test operation failed", "TEST_OPERATION_FAILED", 0, operation, value);
+				return { tag: "error", msg: "Test failed." };
 			} else {
 				return { tag: "success", value: operation.value };
 			}
         } else if (operation.op === "remove") { // a remove on root
             return { tag: "success", value: null };
         } else {
-			throw new JsonPatchError("Operation `op` property is not one of operations defined in RFC-6902", "OPERATION_OP_INVALID", 0, operation, value);
+			return { tag: "error", msg: "Unexpected op." };
         }
     } else {
 		const keys: string[] = splitKeys(operation.path);
@@ -69,12 +69,19 @@ function applyOperation<T>(value: T, operation: Operation): PatchResult<T | null
 			} else spec = {$set: operation.value};
 
 			for (let i = keys.length - 1; i >= 0; i -= 1) spec = {[keys[i]]: spec};
+        } else if (operation.op === "copy") {
+			const source = getValueByKeys(value, splitKeys(operation.from));
+			return applyOperation(value, {op: "add", value: source, path: operation.path});
         } else if (operation.op === "move") {
 			const source = getValueByKeys(value, splitKeys(operation.from));
 			// TODO: this is inefficient because the next operation has to re-process keys
 			const result1 = applyOperation(value, {op: "remove", path: operation.from});
 			if (result1.tag === "error") return result1;
 			return applyOperation(result1.value, {op: "add", value: source, path: operation.path});
+        } else if (operation.op === "test") {
+			const source = getValueByKeys(value, splitKeys(operation.path));
+			if (_areEquals(source, operation.value)) return { tag: "success", value };
+			else return { tag: "error", msg: "Test failed." };
         }
 
 		if (!spec) throw new Error("TODO");
