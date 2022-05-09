@@ -11,7 +11,7 @@ export function patch<T>(value: T, operations: ReadonlyArray<Operation>): PatchR
 
   for (let i = 0; i < operations.length; i += 1) {
     const ret: PatchResult<T> = applyOperation(current, operations[i]);
-    if (ret.tag === "error") return ret;
+    if (ret.tag === "error") return {tag: "error", msg: ret.msg + ` (on operation ${i})`};
     else current = ret.value;
   }
 
