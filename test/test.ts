@@ -55,6 +55,7 @@ describe("Add", () => {
   test({foo: ["bar"]}, [{op: "add", path: "/foo/-", value: ["abc", "def"]}]); // RFC A.16
   test({foo: "bar"}, [{op: "add", path: "/baz", value: "qux", xyz: 123} as Operation]); // RFC A.11
   test({foo: "bar"}, [{op: "add", path: "/a/b", value: "qux"}]); // add with nonsensical target
+  test({foo: "bar"}, [{op: "add", path: "/123", value: "qux"}]); // numeric key
 });
 
 describe("Remove", () => {

@@ -41,12 +41,14 @@ function applyOperation<T>(value: T, operation: Operation): PatchResult<T | null
 
     if (operation.op === "add") {
       const finalKey = keys[keys.length - 1];
-      if (isInteger(finalKey)) {
-        spec = {$splice: [[~~finalKey, 0, operation.value]]};
-        keys.length = keys.length - 1;
-      } else if (finalKey === "-") {
-        spec = {$push: [operation.value]};
-        keys.length = keys.length - 1;
+      if (valueAtPathIsArray(value, keys.slice(0, keys.length - 1))) {
+        if (isInteger(finalKey)) {
+          spec = {$splice: [[~~finalKey, 0, operation.value]]};
+          keys.length = keys.length - 1;
+        } else if (finalKey === "-") {
+          spec = {$push: [operation.value]};
+          keys.length = keys.length - 1;
+        } else return { tag: "error", msg: `Wanted to add to array, but key was ${finalKey}.` }
       } else spec = {$set: operation.value};
 
       for (let i = keys.length - 1; i >= 0; i -= 1) spec = {[keys[i]]: spec};
@@ -80,7 +82,6 @@ function applyOperation<T>(value: T, operation: Operation): PatchResult<T | null
       else return { tag: "error", msg: "Test failed." };
     }
 
-    if (!spec) throw new Error("TODO");
 
     try {
       return { tag: "success", value: update(value, spec) };
@@ -92,6 +93,11 @@ function applyOperation<T>(value: T, operation: Operation): PatchResult<T | null
 
 function splitKeys(path: string) {
   return path.split("/").slice(1).map((key) => (key && key.indexOf('~') != -1) ? unescapePathComponent(key) : key);
+}
+
+function valueAtPathIsArray(root: any, keys: string[]) {
+  const value = getValueByKeys(root, keys);
+  return Array.isArray(value);
 }
 
 function getValueByKeys(value: any, keys: string[]) {
