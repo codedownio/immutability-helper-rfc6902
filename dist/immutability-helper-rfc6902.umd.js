@@ -351,9 +351,10 @@
 	        return { tag: "success", value: value };
 	    var current = value;
 	    for (var i = 0; i < operations.length; i += 1) {
+	        // console.log(`-------------- Operation ${i} --------------`);
 	        var ret = applyOperation(current, operations[i]);
 	        if (ret.tag === "error")
-	            return ret;
+	            return { tag: "error", msg: ret.msg + " (on operation ".concat(i, ")") };
 	        else
 	            current = ret.value;
 	    }
@@ -386,43 +387,59 @@
 	        }
 	    }
 	    else {
-	        var keys = splitKeys(operation.path);
+	        var keys_1 = splitKeys(operation.path);
 	        var spec = void 0;
+	        // If there are no keys, just return the value
+	        if (keys_1.length === 0)
+	            return { tag: "error", msg: "Path was malformed." };
+	        var isArray = function () { return valueAtPathIsArray(value, keys_1.slice(0, keys_1.length - 1)); };
 	        if (operation.op === "add") {
-	            var finalKey = keys[keys.length - 1];
-	            if (isInteger(finalKey)) {
-	                spec = { $splice: [[~~finalKey, 0, operation.value]] };
-	                keys.length = keys.length - 1;
-	            }
-	            else if (finalKey === "-") {
-	                spec = { $push: [operation.value] };
-	                keys.length = keys.length - 1;
+	            var finalKey = keys_1[keys_1.length - 1];
+	            if (isArray()) {
+	                if (isInteger(finalKey)) {
+	                    spec = { $splice: [[~~finalKey, 0, operation.value]] };
+	                    keys_1.length = keys_1.length - 1;
+	                }
+	                else if (finalKey === "-") {
+	                    spec = { $push: [operation.value] };
+	                    keys_1.length = keys_1.length - 1;
+	                }
+	                else
+	                    return { tag: "error", msg: "Wanted to add to array, but key was ".concat(finalKey, ".") };
 	            }
 	            else
 	                spec = { $set: operation.value };
-	            for (var i = keys.length - 1; i >= 0; i -= 1)
-	                spec = (_a = {}, _a[keys[i]] = spec, _a);
+	            for (var i = keys_1.length - 1; i >= 0; i -= 1)
+	                spec = (_a = {}, _a[keys_1[i]] = spec, _a);
 	        }
 	        else if (operation.op === "remove") {
-	            var finalKey = keys[keys.length - 1];
-	            if (isInteger(finalKey))
+	            var finalKey = keys_1[keys_1.length - 1];
+	            if (isInteger(finalKey) && isArray())
 	                spec = { $splice: [[~~finalKey, 1]] };
 	            else
 	                spec = { $unset: [finalKey] };
-	            keys.length = keys.length - 1;
-	            for (var i = keys.length - 1; i >= 0; i -= 1)
-	                spec = (_b = {}, _b[keys[i]] = spec, _b);
+	            keys_1.length = keys_1.length - 1;
+	            for (var i = keys_1.length - 1; i >= 0; i -= 1)
+	                spec = (_b = {}, _b[keys_1[i]] = spec, _b);
 	        }
 	        else if (operation.op === "replace") {
-	            var finalKey = keys[keys.length - 1];
-	            if (isInteger(finalKey)) {
-	                spec = { $splice: [[~~finalKey, 1, operation.value]] };
-	                keys.length = keys.length - 1;
+	            var finalKey = keys_1[keys_1.length - 1];
+	            if (isArray()) {
+	                if (isInteger(finalKey)) {
+	                    spec = { $splice: [[~~finalKey, 1, operation.value]] };
+	                    keys_1.length = keys_1.length - 1;
+	                }
+	                else if (finalKey === "-") {
+	                    spec = { $push: [operation.value] };
+	                    keys_1.length = keys_1.length - 1;
+	                }
+	                else
+	                    return { tag: "error", msg: "Wanted to replace on array, but key was ".concat(finalKey, ".") };
 	            }
 	            else
 	                spec = { $set: operation.value };
-	            for (var i = keys.length - 1; i >= 0; i -= 1)
-	                spec = (_c = {}, _c[keys[i]] = spec, _c);
+	            for (var i = keys_1.length - 1; i >= 0; i -= 1)
+	                spec = (_c = {}, _c[keys_1[i]] = spec, _c);
 	        }
 	        else if (operation.op === "copy") {
 	            var source = getValueByKeys(value, splitKeys(operation.from));
@@ -443,8 +460,6 @@
 	            else
 	                return { tag: "error", msg: "Test failed." };
 	        }
-	        if (!spec)
-	            throw new Error("TODO");
 	        try {
 	            return { tag: "success", value: update(value, spec) };
 	        }
@@ -456,10 +471,14 @@
 	function splitKeys(path) {
 	    return path.split("/").slice(1).map(function (key) { return (key && key.indexOf('~') != -1) ? unescapePathComponent(key) : key; });
 	}
+	function valueAtPathIsArray(root, keys) {
+	    var value = getValueByKeys(root, keys);
+	    return Array.isArray(value);
+	}
 	function getValueByKeys(value, keys) {
-	    for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
-	        var key = keys_1[_i];
-	        if (isInteger(key))
+	    for (var _i = 0, keys_2 = keys; _i < keys_2.length; _i++) {
+	        var key = keys_2[_i];
+	        if (isInteger(key) && Array.isArray(value))
 	            value = value[~~key];
 	        else
 	            value = value[key];

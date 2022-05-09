@@ -43,6 +43,7 @@ describe("Root operations", () => {
   test({foo: "bar"}, [{op: "copy", path: "", from: "/foo"}]);
   test({foo: "bar"}, [{op: "test", path: "", value: 42}]);
   test({foo: "bar"}, [{op: "test", path: "", value: {foo: "bar"}}]);
+  test([1, 2, 3], [{op: "remove", path: "-"}]); // remove last elem with dash
 });
 
 describe("Add", () => {
@@ -61,11 +62,16 @@ describe("Add", () => {
 describe("Remove", () => {
   test({baz: "qux", foo: "bar"}, [{op: "remove", path: "/baz"}]); // RFC A.3
   test({foo: ["bar", "qux", "baz"]}, [{op: "remove", path: "/foo/1"}]); // RFC A.4
+  test({foo: [1, 2, 3]}, [{op: "remove", path: "/foo/-"}]); // dash key
+  test({"123": "bar"}, [{op: "remove", path: "/123"}]); // numeric key
+  test({"foo": [1, 2, 3]}, [{op: "remove", path: "/foo/-"}]); // remove last elem with dash
 });
 
 describe("Replace", () => {
   test({baz: "qux", foo: "bar"}, [{op: "replace", path: "/baz", value: "boo"}]); // RFC A.5
   test({foo: "bar"}, [{op: "replace", path: "/a", value: "abc"}]);
+  test({"123": "bar"}, [{op: "replace", path: "/123", value: "abc"}]); // numeric key
+  test({"foo": [1, 2, 3]}, [{op: "replace", path: "/foo/-", value: "abc"}]); // replace last elem with dash
 });
 
 describe("Move", () => {

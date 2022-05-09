@@ -10,6 +10,7 @@ export function patch<T>(value: T, operations: ReadonlyArray<Operation>): PatchR
   let current: T | null = value;
 
   for (let i = 0; i < operations.length; i += 1) {
+    // console.log(`-------------- Operation ${i} --------------`);
     const ret: PatchResult<T> = applyOperation(current, operations[i]);
     if (ret.tag === "error") return {tag: "error", msg: ret.msg + ` (on operation ${i})`};
     else current = ret.value;
@@ -39,31 +40,41 @@ function applyOperation<T>(value: T, operation: Operation): PatchResult<T | null
     const keys: string[] = splitKeys(operation.path);
     let spec: any;
 
+    // If there are no keys, just return the value
+    if (keys.length === 0) return { tag: "error", msg: "Path was malformed." };
+
+    const isArray = () => valueAtPathIsArray(value, keys.slice(0, keys.length - 1));
+
     if (operation.op === "add") {
       const finalKey = keys[keys.length - 1];
-      if (valueAtPathIsArray(value, keys.slice(0, keys.length - 1))) {
+      if (isArray()) {
         if (isInteger(finalKey)) {
           spec = {$splice: [[~~finalKey, 0, operation.value]]};
           keys.length = keys.length - 1;
         } else if (finalKey === "-") {
           spec = {$push: [operation.value]};
           keys.length = keys.length - 1;
-        } else return { tag: "error", msg: `Wanted to add to array, but key was ${finalKey}.` }
+        } else return { tag: "error", msg: `Wanted to add to array, but key was ${finalKey}.` };
       } else spec = {$set: operation.value};
 
       for (let i = keys.length - 1; i >= 0; i -= 1) spec = {[keys[i]]: spec};
     } else if (operation.op === "remove") {
       const finalKey = keys[keys.length - 1];
-      if (isInteger(finalKey)) spec = {$splice: [[~~finalKey, 1]]};
+      if (isInteger(finalKey) && isArray()) spec = {$splice: [[~~finalKey, 1]]};
       else spec = {$unset: [finalKey]};
       keys.length = keys.length - 1;
 
       for (let i = keys.length - 1; i >= 0; i -= 1) spec = {[keys[i]]: spec};
     } else if (operation.op === "replace") {
       const finalKey = keys[keys.length - 1];
-      if (isInteger(finalKey)) {
-        spec = {$splice: [[~~finalKey, 1, operation.value]]};
-        keys.length = keys.length - 1;
+      if (isArray()) {
+        if (isInteger(finalKey)) {
+          spec = {$splice: [[~~finalKey, 1, operation.value]]};
+          keys.length = keys.length - 1;
+        } else if (finalKey === "-") {
+          spec = {$push: [operation.value]};
+          keys.length = keys.length - 1;
+        } else return { tag: "error", msg: `Wanted to replace on array, but key was ${finalKey}.` };
       } else spec = {$set: operation.value};
 
       for (let i = keys.length - 1; i >= 0; i -= 1) spec = {[keys[i]]: spec};
@@ -81,7 +92,6 @@ function applyOperation<T>(value: T, operation: Operation): PatchResult<T | null
       if (isEqual(source, operation.value)) return { tag: "success", value };
       else return { tag: "error", msg: "Test failed." };
     }
-
 
     try {
       return { tag: "success", value: update(value, spec) };
@@ -102,7 +112,7 @@ function valueAtPathIsArray(root: any, keys: string[]) {
 
 function getValueByKeys(value: any, keys: string[]) {
   for (let key of keys) {
-    if (isInteger(key)) value = value[~~key]
+    if (isInteger(key) && Array.isArray(value)) value = value[~~key]
     else value = value[key];
   }
 
