@@ -10,7 +10,7 @@ import {patch} from "../src/main";
 
 function test(doc: any, patches: Operation[]) {
   // See what fast-json-patch has to say
-  let desired: PatchResult<any>
+  let desired: PatchResult<any>;
   try {
     desired = { tag: "success", value: applyPatch(cloneDeep(doc), patches).newDocument };
   } catch (err: any) {
