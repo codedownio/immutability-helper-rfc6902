@@ -1,7 +1,7 @@
 
 import update from "immutability-helper";
 
-import { isEqual, unescapePathComponent, isInteger } from "./util";
+import { isEqual, unescapePathComponent, isInteger } from "./util.js";
 
 
 export function patch<T>(value: T, operations: ReadonlyArray<Operation>): PatchResult<T> {
@@ -94,6 +94,7 @@ function applyOperation<T>(value: T, operation: Operation): PatchResult<T | null
     }
 
     try {
+      // @ts-ignore "This expression is not callable." (not sure why, module resolution issue?)
       return { tag: "success", value: update(value, spec) };
     } catch (err: any) {
       return { tag: "error", msg: err.toString() };

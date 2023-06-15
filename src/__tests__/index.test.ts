@@ -1,11 +1,10 @@
 
-import assert from "assert";
 import fc from "fast-check";
 import { applyPatch, compare } from "fast-json-patch";
-import cloneDeep from "lodash/cloneDeep";
-import isEqual from "lodash/isEqual";
+import {cloneDeep, isEqual} from "lodash";
+import { describe, it } from "vitest";
 
-import {patch} from "../src/main";
+import {patch} from "../index.js";
 
 
 function test(doc: any, patches: Operation[]) {
@@ -23,14 +22,14 @@ function test(doc: any, patches: Operation[]) {
     const ourResult = patch(doc, patches);
     if (ourResult.tag === "success" && desired.tag === "success") {
       if (!isEqual(ourResult.value, desired.value)) {
-        assert.fail(`Our result was ${JSON.stringify(ourResult.value)}`);
+        throw new Error(`Our result was ${JSON.stringify(ourResult.value)}`);
       }
     } else if (ourResult.tag === "error" && desired.tag === "error") {
 
     } else if (ourResult.tag === "success" && desired.tag === "error") {
-      assert.fail("Our result succeeded but the reference implementation errored.");
+      throw new Error("Our result succeeded but the reference implementation errored.");
     } else if (ourResult.tag === "error" && desired.tag === "success") {
-      assert.fail("Our result errored but the reference implementation succeeded: " + ourResult.msg);
+      throw new Error("Our result errored but the reference implementation succeeded: " + ourResult.msg);
     }
   });
 }
