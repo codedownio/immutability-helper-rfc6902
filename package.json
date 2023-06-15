@@ -1,6 +1,14 @@
 {
-  "name": "immutability-helper-rfc6902",
+  "name": "@codedown/immutability-helper-rfc6902",
   "version": "1.0.0",
+  "description": "Apply RFC 6902 patches immutably using immutability-helper",
+  "homepage": "https://github.com/codedownio/immutability-helper-rfc6902",
+  "license": "MIT",
+  "author": {
+    "name" : "Tom McLaughlin",
+    "email" : "tom@codedown.io",
+    "url": "https://thomasjm.github.io/"
+  },
   "main": "dist/immutability-helper-rfc6902.cjs.js",
   "module": "dist/immutability-helper-rfc6902.esm.js",
   "browser": "dist/immutability-helper-rfc6902.umd.js",
